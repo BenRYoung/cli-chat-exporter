@@ -1,0 +1,48 @@
+{
+  "name": "@benryoung/cli-chat-exporter",
+  "version": "0.2.1",
+  "type": "module",
+  "description": "Local CLI and scheduler for exporting AI chat histories to Markdown and HTML",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "cursor",
+    "openclaw",
+    "chat-export",
+    "markdown",
+    "html",
+    "backup"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benryoung/cli-chat-exporter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/benryoung/cli-chat-exporter/issues"
+  },
+  "homepage": "https://github.com/benryoung/cli-chat-exporter#readme",
+  "bin": {
+    "cce": "bin/cce.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "assets/screenshots/*.png",
+    "export_session.py",
+    "exporter/*.py",
+    "README.md",
+    "README_zh.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "python tests/test_python_export_api.py && python tests/test_metadata_drift_support.py && node tests/test_node_scheduler.mjs && node tests/test_node_cli.mjs",
+    "pack:check": "npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

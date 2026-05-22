@@ -1,0 +1,12 @@
+*.ppt
+*.pptx
+*.png
+!assets/screenshots/*.png
+*.pdf
+*.html
+tmp.md
+
+**/__pycache__/
+TEST_*/
+**/tmp/
+export_logs/

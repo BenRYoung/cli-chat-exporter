@@ -1,0 +1,35 @@
+# Changelog
+
+## 0.2.1
+
+- Added parser support for newer Codex image generation and agent reasoning metadata.
+- Added parser support for Cursor `tool_use` content parts.
+- Suppressed repeated metadata drift warnings for confirmed Codex and Cursor record types.
+- Added regression coverage for metadata drift parsing and diagnostics.
+
+## 0.2.0
+
+- Added manifest-backed incremental export detection based on source and output fingerprints.
+- Updated changed or resumed sessions by atomically replacing stale exports.
+- Added separate `Updated files` and `Skipped unchanged files` reporting.
+- Added regression coverage for unchanged exports, resumed sessions, manifest adoption, and output repair.
+
+## 0.1.0
+
+Initial stable release.
+
+- Added the `cce` npm CLI.
+- Export current-user Codex, Cursor, and OpenClaw histories.
+- Generate concise and detailed Markdown / HTML archives.
+- Added local configuration with `cce config`.
+- Added lightweight scheduled exports with `cce service`.
+- Added `cce doctor` for runtime diagnostics.
+- Kept the npm CLI scoped to the current local user.
+
+## 0.1.0-alpha.1
+
+- Public prerelease used to validate npm packaging and local installation.
+
+## 0.1.0-alpha.0
+
+- Initial prerelease.

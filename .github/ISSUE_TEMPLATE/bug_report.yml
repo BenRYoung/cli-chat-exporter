@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact command you ran.
+      placeholder: |
+        1. Run `cce doctor`
+        2. Run `cce export ...`
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Output from `cce doctor` is useful. Remove private paths or sensitive data if needed.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant logs only. Do not attach private chat histories or full export archives.
+      render: text
+    validations:
+      required: false
