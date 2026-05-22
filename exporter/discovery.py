@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import getpass
 import os
 import pathlib
 from dataclasses import dataclass
@@ -43,6 +44,17 @@ def expand_pattern(pattern: str, platform: str) -> str:
         home = run_wsl(platform, 'printf %s "$HOME"')
         return pattern.replace("~", home, 1)
     return os.path.expanduser(pattern)
+
+
+def native_windows_pattern(source: str, home: pathlib.Path) -> str | None:
+    if source == "codex":
+        return str(home / ".codex" / "sessions" / "*" / "*" / "*" / "*.jsonl")
+    return None
+
+
+def current_windows_user() -> str:
+    username = os.environ.get("USERNAME") or getpass.getuser()
+    return str(username).strip()
 
 
 def regular_user_homes() -> list[tuple[str, pathlib.Path]]:
@@ -99,9 +111,27 @@ def find_candidate_paths(args: argparse.Namespace) -> list[CandidatePath]:
                 path = pathlib.Path(raw)
                 if path.is_file():
                     candidates.append(CandidatePath(path, username))
+    elif is_windows():
+        current_user = current_windows_user()
+        if selected_user not in {"", "all", current_user}:
+            raise SystemExit(
+                f"--user only supports the current Windows user ({current_user}) for native paths."
+            )
+        username = None if selected_user in {"", "all"} else current_user
+        home = pathlib.Path.home()
+        for source in sources:
+            native_pattern = native_windows_pattern(source, home)
+            if native_pattern is not None:
+                for raw in glob.glob(native_pattern):
+                    path = pathlib.Path(raw)
+                    if path.is_file():
+                        candidates.append(CandidatePath(path, username))
+                continue
+            for raw in glob.glob(expand_pattern(SOURCE_PATTERNS[source], args.platform)):
+                path = pathlib.Path(raw)
+                if path.is_file():
+                    candidates.append(CandidatePath(path, username))
     elif selected_user:
-        if is_windows():
-            raise SystemExit("--user is only supported from Linux/WSL paths.")
         user_homes = regular_user_homes() if selected_user == "all" else [(selected_user, home_for_user(selected_user))]
         for username, home in user_homes:
             for source in sources:

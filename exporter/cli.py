@@ -235,17 +235,16 @@ def write_output(path: pathlib.Path, content: str, overwrite: bool = False) -> O
     if existing_stat and not overwrite:
         old_size = existing_stat.st_size
         old_mtime_ns = existing_stat.st_mtime_ns
-        if old_size == len(content_bytes):
-            try:
-                if path.read_text(encoding="utf-8") == content:
-                    return OutputWriteResult(
-                        "skipped",
-                        old_size=old_size,
-                        new_size=len(content_bytes),
-                        old_mtime_ns=old_mtime_ns,
-                    )
-            except UnicodeDecodeError:
-                pass
+        try:
+            if path.read_text(encoding="utf-8") == content:
+                return OutputWriteResult(
+                    "skipped",
+                    old_size=old_size,
+                    new_size=len(content_bytes),
+                    old_mtime_ns=old_mtime_ns,
+                )
+        except UnicodeDecodeError:
+            pass
         status = "updated"
     else:
         status = "written"
