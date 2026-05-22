@@ -1,6 +1,6 @@
 {
   "name": "@benryoung/cli-chat-exporter",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "description": "Local CLI and scheduler for exporting AI chat histories to Markdown and HTML",
   "license": "MIT",

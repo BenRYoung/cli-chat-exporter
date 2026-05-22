@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+- Added Windows support for Codex session discovery and export.
+- Added regression coverage for Windows-style Codex session paths.
+- Kept generated package archives out of the public checkout.
+
 ## 0.2.1
 
 - Added parser support for newer Codex image generation and agent reasoning metadata.
