@@ -27,16 +27,45 @@ assert.deepEqual(scheduleSlots('21:00', '02:00', '1h'), [
   '02:00',
 ]);
 
-const base = new Date('2026-05-11T07:30:00+08:00');
-assert.equal(
-  nextRunAfter(base, { earliest: '08:00', latest: '10:00', interval: '1h' }).toISOString(),
-  new Date('2026-05-11T08:00:00+08:00').toISOString(),
-);
+function localDate(year, month, day, hour, minute = 0) {
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+}
 
-const afterWindow = new Date('2026-05-11T11:00:00+08:00');
-assert.equal(
-  nextRunAfter(afterWindow, { earliest: '08:00', latest: '10:00', interval: '1h' }).toISOString(),
-  new Date('2026-05-12T08:00:00+08:00').toISOString(),
-);
+function assertLocalDateParts(date, expected) {
+  assert.equal(date.getFullYear(), expected.year);
+  assert.equal(date.getMonth() + 1, expected.month);
+  assert.equal(date.getDate(), expected.day);
+  assert.equal(date.getHours(), expected.hour);
+  assert.equal(date.getMinutes(), expected.minute);
+}
+
+function assertSchedulerInCurrentTimezone() {
+  const beforeWindow = localDate(2026, 5, 11, 7, 30);
+  assertLocalDateParts(
+    nextRunAfter(beforeWindow, { earliest: '08:00', latest: '10:00', interval: '1h' }),
+    { year: 2026, month: 5, day: 11, hour: 8, minute: 0 },
+  );
+
+  const afterWindow = localDate(2026, 5, 11, 11, 0);
+  assertLocalDateParts(
+    nextRunAfter(afterWindow, { earliest: '08:00', latest: '10:00', interval: '1h' }),
+    { year: 2026, month: 5, day: 12, hour: 8, minute: 0 },
+  );
+
+  const beforeMidnightSlot = localDate(2026, 5, 11, 23, 30);
+  assertLocalDateParts(
+    nextRunAfter(beforeMidnightSlot, { earliest: '21:00', latest: '02:00', interval: '1h' }),
+    { year: 2026, month: 5, day: 12, hour: 0, minute: 0 },
+  );
+}
+
+for (const timezone of [undefined, 'UTC', 'Asia/Shanghai', 'America/New_York']) {
+  if (timezone) {
+    process.env.TZ = timezone;
+  } else {
+    delete process.env.TZ;
+  }
+  assertSchedulerInCurrentTimezone();
+}
 
 console.log('node scheduler tests passed');

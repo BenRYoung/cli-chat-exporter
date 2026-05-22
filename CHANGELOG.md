@@ -6,6 +6,7 @@
 - Added parser support for Cursor `tool_use` content parts.
 - Suppressed repeated metadata drift warnings for confirmed Codex and Cursor record types.
 - Added regression coverage for metadata drift parsing and diagnostics.
+- Hardened scheduler tests against local timezone differences in GitHub Actions.
 
 ## 0.2.0
 
