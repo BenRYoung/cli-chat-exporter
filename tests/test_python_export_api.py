@@ -13,6 +13,7 @@ import pathlib
 import sys
 import tempfile
 from types import SimpleNamespace
+from unittest.mock import patch
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -130,6 +131,34 @@ def assert_run_export_api_returns_result_for_empty_scope() -> None:
         assert result.log_path.exists()
 
 
+def assert_windows_codex_current_home_is_discovered() -> None:
+    with tempfile.TemporaryDirectory() as raw_home:
+        home = pathlib.Path(raw_home)
+        session_path = home / ".codex" / "sessions" / "2026" / "05" / "22" / "windows-codex.jsonl"
+        session_path.parent.mkdir(parents=True, exist_ok=True)
+        session_path.write_text("{}\n", encoding="utf-8")
+
+        args = SimpleNamespace(
+            session_file=None,
+            session_id=None,
+            source="codex",
+            user="tester",
+            platform="ubuntu",
+            home_override=None,
+            fail_on_no_sessions=True,
+        )
+
+        with (
+            patch("exporter.discovery.is_windows", return_value=True),
+            patch("exporter.discovery.current_windows_user", return_value="tester"),
+            patch("pathlib.Path.home", return_value=home),
+        ):
+            candidates = find_candidate_paths(argparse.Namespace(**vars(args)))
+
+        found = [candidate.path for candidate in candidates]
+        assert found == [session_path], found
+
+
 def assert_incremental_export_updates_changed_outputs() -> None:
     session_id = "api-incremental-session"
     with tempfile.TemporaryDirectory() as raw_root:
@@ -186,6 +215,7 @@ def assert_incremental_export_updates_changed_outputs() -> None:
 def main() -> int:
     assert_source_all_maps_to_discovery_all()
     assert_run_export_api_returns_result_for_empty_scope()
+    assert_windows_codex_current_home_is_discovered()
     assert_incremental_export_updates_changed_outputs()
     print("python export api tests passed")
     return 0
