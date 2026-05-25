@@ -3,6 +3,7 @@
 *.png
 !assets/screenshots/*.png
 *.pdf
+*.tgz
 *.html
 tmp.md
 
