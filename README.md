@@ -27,7 +27,7 @@ Requirements:
 
 - Node.js 20 or newer.
 - Python 3 available as `python3` or `python`, or configured through `CCE_PYTHON` / `runtime.python`.
-- Linux or WSL for automatic local-user discovery.
+- Automatic local-user discovery uses native system paths; Windows currently auto-discovers Codex only.
 
 ## Quick Start
 

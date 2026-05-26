@@ -23,7 +23,7 @@ npm install -g @benryoung/cli-chat-exporter
 
 - Node.js 20 或更新版本。
 - 可用的 Python 3，命令为 `python3` / `python`，或通过 `CCE_PYTHON` / `runtime.python` 配置。
-- 自动发现本机用户记录主要面向 Linux / WSL 环境。
+- 自动发现本机用户记录支持当前用户的原生系统路径；Windows 下当前临时仅自动发现 Codex。
 
 ## 快速开始
 
