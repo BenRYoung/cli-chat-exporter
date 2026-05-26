@@ -124,9 +124,32 @@ def assert_cursor_tool_use_is_supported() -> None:
         assert "target_mode_id" in detail_md
 
 
+def assert_windows_cursor_project_key_is_decoded() -> None:
+    rows = [
+        {
+            "role": "user",
+            "message": {"content": [{"type": "text", "text": "<user_query>Check status</user_query>"}]},
+        }
+    ]
+    with tempfile.TemporaryDirectory() as raw_root:
+        session_path = (
+            pathlib.Path(raw_root)
+            / ".cursor"
+            / "projects"
+            / "e-InfoMatch"
+            / "agent-transcripts"
+            / "session"
+            / "session.jsonl"
+        )
+        write_jsonl(session_path, rows)
+        session = normalize_session("cursor", session_path, rows)
+        assert session.project_path == "E:/InfoMatch", session.project_path
+
+
 def main() -> int:
     assert_codex_image_and_reasoning_are_supported()
     assert_cursor_tool_use_is_supported()
+    assert_windows_cursor_project_key_is_decoded()
     print("metadata drift support tests passed")
     return 0
 
