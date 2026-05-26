@@ -46,6 +46,8 @@ def expand_pattern(pattern: str) -> str:
 def native_windows_pattern(source: str, home: pathlib.Path) -> str | None:
     if source == "codex":
         return str(home / ".codex" / "sessions" / "*" / "*" / "*" / "*.jsonl")
+    if source == "cursor":
+        return str(home / ".cursor" / "projects" / "*" / "agent-transcripts" / "*" / "*.jsonl")
     return None
 
 

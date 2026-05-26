@@ -163,6 +163,9 @@ def _cursor_project_name(path: pathlib.Path) -> str:
         return "root"
     if project_key.isdigit():
         return "root"
+    if re.match(r"^[A-Za-z](-[A-Za-z0-9._-]+)+$", project_key):
+        drive, rest = project_key.split("-", 1)
+        return f"{drive.upper()}:/{rest.replace('-', '/')}"
     if re.match(r"^(mnt|home|Users)(-[A-Za-z0-9._-]+)+$", project_key):
         return project_key.replace("-", "/")
     return "root"

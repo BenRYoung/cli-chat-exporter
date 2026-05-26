@@ -156,7 +156,7 @@ def assert_windows_codex_current_home_is_discovered() -> None:
         assert found == [session_path], found
 
 
-def assert_windows_source_all_skips_non_codex_sources() -> None:
+def assert_windows_source_all_discovers_codex_and_cursor_only() -> None:
     with tempfile.TemporaryDirectory() as raw_home:
         home = pathlib.Path(raw_home)
         codex_path = home / ".codex" / "sessions" / "2026" / "05" / "22" / "windows-codex.jsonl"
@@ -182,8 +182,8 @@ def assert_windows_source_all_skips_non_codex_sources() -> None:
         ):
             candidates = find_candidate_paths(argparse.Namespace(**vars(args)))
 
-        found = [candidate.path for candidate in candidates]
-        assert found == [codex_path], found
+        found = {candidate.path for candidate in candidates}
+        assert found == {codex_path, cursor_path}, found
 
 
 def assert_incremental_export_updates_changed_outputs() -> None:
@@ -242,7 +242,7 @@ def main() -> int:
     assert_source_all_maps_to_discovery_all()
     assert_run_export_api_returns_result_for_empty_scope()
     assert_windows_codex_current_home_is_discovered()
-    assert_windows_source_all_skips_non_codex_sources()
+    assert_windows_source_all_discovers_codex_and_cursor_only()
     assert_incremental_export_updates_changed_outputs()
     print("python export api tests passed")
     return 0
