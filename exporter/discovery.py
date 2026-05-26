@@ -7,7 +7,7 @@ import os
 import pathlib
 from dataclasses import dataclass
 
-from .utils import SOURCE_PATTERNS, is_windows, resolve_path, run_wsl
+from .utils import SOURCE_PATTERNS, is_windows, resolve_path
 
 
 @dataclass(frozen=True)
@@ -39,10 +39,7 @@ def detect_source(rows: list[dict], path: pathlib.Path) -> str:
     raise SystemExit(f"Could not detect session source for {path}")
 
 
-def expand_pattern(pattern: str, platform: str) -> str:
-    if is_windows():
-        home = run_wsl(platform, 'printf %s "$HOME"')
-        return pattern.replace("~", home, 1)
+def expand_pattern(pattern: str) -> str:
     return os.path.expanduser(pattern)
 
 
@@ -94,7 +91,7 @@ def find_candidate_paths(args: argparse.Namespace) -> list[CandidatePath]:
     selected_user = str(getattr(args, "user", "all") or "all")
     home_override = getattr(args, "home_override", None)
     if args.session_file:
-        path = resolve_path(args.session_file, args.platform)
+        path = resolve_path(args.session_file)
         if not path.exists():
             raise SystemExit(f"Session file not found: {path}")
         username = None if selected_user == "all" else selected_user
@@ -127,10 +124,7 @@ def find_candidate_paths(args: argparse.Namespace) -> list[CandidatePath]:
                     if path.is_file():
                         candidates.append(CandidatePath(path, username))
                 continue
-            for raw in glob.glob(expand_pattern(SOURCE_PATTERNS[source], args.platform)):
-                path = pathlib.Path(raw)
-                if path.is_file():
-                    candidates.append(CandidatePath(path, username))
+            continue
     elif selected_user:
         user_homes = regular_user_homes() if selected_user == "all" else [(selected_user, home_for_user(selected_user))]
         for username, home in user_homes:
@@ -142,7 +136,7 @@ def find_candidate_paths(args: argparse.Namespace) -> list[CandidatePath]:
                         candidates.append(CandidatePath(path, username))
     else:
         for source in sources:
-            for raw in glob.glob(expand_pattern(SOURCE_PATTERNS[source], args.platform)):
+            for raw in glob.glob(expand_pattern(SOURCE_PATTERNS[source])):
                 path = pathlib.Path(raw)
                 if path.is_file():
                     candidates.append(CandidatePath(path))

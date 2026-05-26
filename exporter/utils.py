@@ -6,7 +6,6 @@ import json
 import os
 import pathlib
 import re
-import subprocess
 from typing import Any
 
 from .models import Block
@@ -28,29 +27,7 @@ def is_windows() -> bool:
     return os.name == "nt"
 
 
-def run_wsl(distro: str, command: str) -> str:
-    result = subprocess.run(
-        ["wsl.exe", "-d", distro, "--", "bash", "-lc", command],
-        check=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    )
-    return result.stdout.strip()
-
-
-def linux_to_unc(path: str, distro: str) -> pathlib.Path:
-    if not path.startswith("/"):
-        raise ValueError(f"Not a Linux absolute path: {path}")
-    windows_path = path.replace("/", "\\")
-    return pathlib.Path(f"\\\\wsl$\\{distro}{windows_path}")
-
-
-def resolve_path(raw_path: str, distro: str) -> pathlib.Path:
-    if raw_path.startswith("\\\\wsl$\\"):
-        return pathlib.Path(raw_path)
-    if is_windows() and raw_path.startswith("/"):
-        return linux_to_unc(raw_path, distro)
+def resolve_path(raw_path: str) -> pathlib.Path:
     return pathlib.Path(raw_path).expanduser()
 
 

@@ -78,6 +78,11 @@ await assert.rejects(
 );
 
 await assert.rejects(
+  () => main(['export', '--platform', 'ubuntu']),
+  /Unknown option: --platform/,
+);
+
+await assert.rejects(
   () => main(['export', 'all']),
   /Unknown argument: all/,
 );
@@ -98,5 +103,7 @@ const commandSource = fs.readFileSync('lib/cce/commands.js', 'utf8');
 assert.doesNotMatch(commandSource, /sudo/i);
 assert.doesNotMatch(commandSource, /rejectUserScopeFlag/);
 assert.doesNotMatch(commandSource, /current local user/);
+assert.doesNotMatch(commandSource, /--platform/);
+assert.match(commandSource, /windowsHide: true/);
 
 console.log('node cli tests passed');

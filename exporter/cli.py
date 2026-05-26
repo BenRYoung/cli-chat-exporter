@@ -20,7 +20,6 @@ from .utils import default_output_root, load_jsonl, sanitize_rel_path
 
 @dataclass(frozen=True)
 class ExportOptions:
-    platform: str = "ubuntu"
     source: str = "all"
     session_file: str | None = None
     session_id: str | None = None
@@ -367,7 +366,6 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Export Codex, OpenClaw, or Cursor session JSONL to self-contained HTML or Markdown."
     )
-    parser.add_argument("--platform", default="ubuntu", help="Session storage varies among platforms")
     parser.add_argument(
         "--source",
         choices=("all", "auto", "codex", "openclaw", "cursor"),
@@ -385,7 +383,6 @@ def parse_args() -> argparse.Namespace:
 
 def options_from_args(args: argparse.Namespace) -> ExportOptions:
     return ExportOptions(
-        platform=args.platform,
         source=args.source,
         session_file=args.session_file,
         session_id=args.session_id,
@@ -398,7 +395,6 @@ def options_from_args(args: argparse.Namespace) -> ExportOptions:
 
 def namespace_from_options(options: ExportOptions) -> argparse.Namespace:
     return argparse.Namespace(
-        platform=options.platform,
         source=options.source,
         session_file=options.session_file,
         session_id=options.session_id,
