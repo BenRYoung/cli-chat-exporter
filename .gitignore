@@ -12,3 +12,7 @@ TEST_*/
 **/tmp/
 export_logs/
 temp_*/
+
+DOC/
+AGENTS.md
+AGENTS.local.md
