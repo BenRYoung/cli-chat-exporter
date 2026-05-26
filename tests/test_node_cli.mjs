@@ -1,11 +1,21 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { main } from '../lib/cce/commands.js';
+import { isPackageInstallationPresent, main } from '../lib/cce/commands.js';
 
 const testRoot = path.resolve('tests/tmp');
 fs.rmSync(testRoot, { recursive: true, force: true });
 fs.mkdirSync(testRoot, { recursive: true });
+
+const installRoot = path.join(testRoot, 'install-root');
+fs.mkdirSync(path.join(installRoot, 'bin'), { recursive: true });
+assert.equal(isPackageInstallationPresent(installRoot), false);
+fs.writeFileSync(path.join(installRoot, 'package.json'), '{}\n', 'utf8');
+assert.equal(isPackageInstallationPresent(installRoot), false);
+fs.writeFileSync(path.join(installRoot, 'bin', 'cce.js'), '#!/usr/bin/env node\n', 'utf8');
+assert.equal(isPackageInstallationPresent(installRoot), true);
+fs.rmSync(path.join(installRoot, 'package.json'));
+assert.equal(isPackageInstallationPresent(installRoot), false);
 
 async function captureStdout(callback) {
   const originalLog = console.log;
@@ -37,7 +47,7 @@ assert.equal(helpAlias.stdout, help.stdout);
 
 const version = await captureStdout(() => main(['--version']));
 assert.equal(version.code, 0);
-assert.match(version.stdout, /@benryoung\/cli-chat-exporter 0\.2\.2/);
+assert.match(version.stdout, /@benryoung\/cli-chat-exporter 0\.3\.0/);
 
 const staleConfigPath = path.join(testRoot, 'stale-config.json');
 fs.writeFileSync(

@@ -129,6 +129,7 @@ cce service stop
 ```
 
 This is a user-level process, not a system service manager integration.
+If npm removes or replaces the package while the scheduler is running, the background process detects the missing package files and exits.
 
 ## Current-User Scope and Privacy
 

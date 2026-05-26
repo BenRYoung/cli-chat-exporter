@@ -69,6 +69,8 @@ cce service status
 cce service stop
 ```
 
+如果 npm 卸载或替换包时后台服务仍在运行，服务进程会检测到包文件已移除并自动退出。
+
 ## 隐私与权限
 
 npm CLI 固定为当前用户范围：

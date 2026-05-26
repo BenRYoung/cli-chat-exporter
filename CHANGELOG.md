@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Added native Windows current-user discovery for Cursor session transcripts.
+- Removed the legacy `--platform` / WSL path conversion flow from CLI exports.
+- Hid spawned Python and service processes on Windows to avoid extra console windows.
+- Stopped the background service automatically when npm removes or replaces package files.
+- Added regression coverage for Windows Codex/Cursor discovery and Cursor Windows project path decoding.
+
 ## 0.2.2
 
 - Added Windows support for Codex session discovery and export.
