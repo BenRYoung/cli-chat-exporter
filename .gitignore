@@ -3,16 +3,19 @@
 *.png
 !assets/screenshots/*.png
 *.pdf
-*.tgz
 *.html
 tmp.md
+*.zip
 
 **/__pycache__/
 TEST_*/
 **/tmp/
 export_logs/
-temp_*/
-
+debug_record/
 DOC/
 AGENTS.md
 AGENTS.local.md
+.agents/
+.codex/
+.vscode/
+archive/

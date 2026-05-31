@@ -96,6 +96,116 @@ def assert_codex_image_and_reasoning_are_supported() -> None:
         assert image_payload not in detail_md
 
 
+def assert_codex_goal_and_tool_search_are_supported() -> None:
+    rows = [
+        {
+            "type": "session_meta",
+            "timestamp": "2026-05-31T00:00:00Z",
+            "payload": {
+                "id": "codex-goal-metadata",
+                "timestamp": "2026-05-31T00:00:00Z",
+                "cwd": "/tmp/chat-manager-goal",
+            },
+        },
+        {
+            "type": "event_msg",
+            "timestamp": "2026-05-31T00:00:01Z",
+            "payload": {
+                "type": "thread_goal_updated",
+                "threadId": "thread-1",
+                "turnId": "turn-1",
+                "goal": {
+                    "threadId": "thread-1",
+                    "objective": "实现 goal 字段解析。",
+                    "status": "active",
+                    "tokensUsed": 42,
+                    "timeUsedSeconds": 7,
+                    "createdAt": 1779781762,
+                    "updatedAt": 1779781772,
+                },
+            },
+        },
+        {
+            "type": "event_msg",
+            "timestamp": "2026-05-31T00:00:01.500Z",
+            "payload": {
+                "type": "thread_goal_updated",
+                "threadId": "thread-1",
+                "turnId": "turn-1",
+                "goal": {
+                    "threadId": "thread-1",
+                    "objective": "实现 goal 字段解析。",
+                    "status": "active",
+                    "tokensUsed": 84,
+                    "timeUsedSeconds": 9,
+                    "createdAt": 1779781762,
+                    "updatedAt": 1779781774,
+                },
+            },
+        },
+        {
+            "type": "response_item",
+            "timestamp": "2026-05-31T00:00:02Z",
+            "payload": {
+                "type": "tool_search_call",
+                "call_id": "call_tool_search",
+                "status": "completed",
+                "execution": "client",
+                "arguments": {"query": "goal parser", "limit": 5},
+            },
+        },
+        {
+            "type": "response_item",
+            "timestamp": "2026-05-31T00:00:03Z",
+            "payload": {
+                "type": "tool_search_output",
+                "call_id": "call_tool_search",
+                "status": "completed",
+                "execution": "client",
+                "tools": [
+                    {
+                        "type": "namespace",
+                        "name": "multi_agent_v1",
+                        "description": "Tools for spawning agents.",
+                        "tools": [
+                            {
+                                "type": "function",
+                                "name": "spawn_agent",
+                                "description": "Spawn a sub-agent for a scoped task.",
+                            }
+                        ],
+                    }
+                ],
+            },
+        },
+        {
+            "type": "response_item",
+            "timestamp": "2026-05-31T00:00:04Z",
+            "payload": {
+                "type": "message",
+                "role": "assistant",
+                "content": [{"type": "output_text", "text": "Done."}],
+            },
+        },
+    ]
+    with tempfile.TemporaryDirectory() as raw_root:
+        session_path = pathlib.Path(raw_root) / "codex.jsonl"
+        write_jsonl(session_path, rows)
+        session = normalize_session("codex", session_path, rows)
+        issues = diagnose_session("codex", session_path, rows, session)
+        unknown_issues = [issue.short() for issue in issues if issue.reason.startswith("unknown")]
+        assert not unknown_issues, unknown_issues
+        detail_md = render_md(session, detail=True)
+        assert detail_md.count("## Goal Update") == 1
+        assert "Goal Metadata" in detail_md
+        assert "实现 goal 字段解析。" in detail_md
+        assert "Tokens used: 84" in detail_md
+        assert "Tokens used: 42" not in detail_md
+        assert "Tool Search: goal parser" in detail_md
+        assert "Tool Search Result" in detail_md
+        assert "spawn_agent" in detail_md
+
+
 def assert_cursor_tool_use_is_supported() -> None:
     rows = [
         {
@@ -148,6 +258,7 @@ def assert_windows_cursor_project_key_is_decoded() -> None:
 
 def main() -> int:
     assert_codex_image_and_reasoning_are_supported()
+    assert_codex_goal_and_tool_search_are_supported()
     assert_cursor_tool_use_is_supported()
     assert_windows_cursor_project_key_is_decoded()
     print("metadata drift support tests passed")

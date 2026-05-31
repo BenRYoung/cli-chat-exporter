@@ -47,7 +47,7 @@ assert.equal(helpAlias.stdout, help.stdout);
 
 const version = await captureStdout(() => main(['--version']));
 assert.equal(version.code, 0);
-assert.match(version.stdout, /@benryoung\/cli-chat-exporter 0\.3\.0/);
+assert.match(version.stdout, /@benryoung\/cli-chat-exporter 0\.3\.1/);
 
 const staleConfigPath = path.join(testRoot, 'stale-config.json');
 fs.writeFileSync(

@@ -114,6 +114,128 @@ def _image_payload_summary(payload: dict[str, Any]) -> dict[str, Any]:
     return summary
 
 
+def _limited_list(items: list[Any], limit: int) -> tuple[list[Any], int]:
+    return items[:limit], max(0, len(items) - limit)
+
+
+def _tool_search_tool_summary(tool: Any) -> Any:
+    if not isinstance(tool, dict):
+        return tool
+    summary: dict[str, Any] = {}
+    for key in ("type", "name"):
+        if tool.get(key) is not None:
+            summary[key] = tool.get(key)
+    description = str(tool.get("description") or "").strip()
+    if description:
+        summary["description"] = short_text(description, 240)
+    child_tools = tool.get("tools")
+    if isinstance(child_tools, list):
+        limited_tools, omitted = _limited_list(child_tools, 20)
+        summary["tools_count"] = len(child_tools)
+        summary["tools"] = [_tool_search_tool_summary(item) for item in limited_tools]
+        if omitted:
+            summary["tools_omitted"] = omitted
+    return summary or tool
+
+
+def _tool_search_payload_summary(payload: dict[str, Any]) -> dict[str, Any]:
+    summary: dict[str, Any] = {}
+    for key, value in payload.items():
+        if key == "tools" and isinstance(value, list):
+            limited_tools, omitted = _limited_list(value, 20)
+            summary["tools_count"] = len(value)
+            summary["tools"] = [_tool_search_tool_summary(tool) for tool in limited_tools]
+            if omitted:
+                summary["tools_omitted"] = omitted
+        else:
+            summary[key] = value
+    return summary
+
+
+def _goal_payload_summary(payload: dict[str, Any]) -> dict[str, Any]:
+    goal = payload.get("goal")
+    summary: dict[str, Any] = {
+        key: payload.get(key)
+        for key in ("type", "threadId", "turnId")
+        if payload.get(key) is not None
+    }
+    if isinstance(goal, dict):
+        summary["goal"] = {
+            key: goal.get(key)
+            for key in (
+                "threadId",
+                "objective",
+                "status",
+                "tokenBudget",
+                "tokensUsed",
+                "timeUsedSeconds",
+                "createdAt",
+                "updatedAt",
+            )
+            if goal.get(key) is not None
+        }
+        extras = {
+            key: value
+            for key, value in goal.items()
+            if key not in summary["goal"]
+        }
+        if extras:
+            summary["goal_extra"] = extras
+    else:
+        summary["goal"] = goal
+    return summary
+
+
+def _goal_update_turn(payload: dict[str, Any], timestamp: str | None) -> Turn:
+    goal = payload.get("goal")
+    goal_data = goal if isinstance(goal, dict) else {}
+    objective = str(goal_data.get("objective") or "").strip()
+    status = str(goal_data.get("status") or "").strip()
+    meta = clean_meta(
+        [
+            f"Status: {status}" if status else None,
+            f"Tokens used: {goal_data.get('tokensUsed')}" if goal_data.get("tokensUsed") is not None else None,
+            (
+                f"Token budget: {goal_data.get('tokenBudget')}"
+                if goal_data.get("tokenBudget") is not None
+                else None
+            ),
+            (
+                f"Time used: {goal_data.get('timeUsedSeconds')}s"
+                if goal_data.get("timeUsedSeconds") is not None
+                else None
+            ),
+            f"Thread ID: {payload.get('threadId')}" if payload.get("threadId") else None,
+            f"Turn ID: {payload.get('turnId')}" if payload.get("turnId") else None,
+        ]
+    )
+    blocks = [text_block("Goal Objective", objective)] if objective else [json_block("Goal", goal)]
+    return Turn(
+        role="event",
+        title="Goal Update",
+        timestamp=timestamp,
+        meta=meta,
+        blocks=blocks,
+        detail_blocks=[json_block("Goal Metadata", _goal_payload_summary(payload))],
+    )
+
+
+def _goal_update_key(payload: dict[str, Any]) -> tuple[str, str, str]:
+    goal = payload.get("goal")
+    goal_data = goal if isinstance(goal, dict) else {}
+    thread_id = goal_data.get("threadId") or payload.get("threadId") or ""
+    objective = goal_data.get("objective") or ""
+    status = goal_data.get("status") or ""
+    return str(thread_id), str(objective), str(status)
+
+
+def _replace_turn_content(target: Turn, source: Turn) -> None:
+    target.timestamp = source.timestamp
+    target.meta = source.meta
+    target.blocks = source.blocks
+    target.detail_blocks = source.detail_blocks
+
+
 def _append_assistant_detail(
     current_assistant: Turn | None,
     pending: PendingAssistant,
@@ -205,6 +327,7 @@ def normalize_codex(path: pathlib.Path, rows: list[dict[str, Any]]) -> SessionEx
     turns: list[Turn] = []
     current_assistant: Turn | None = None
     pending = PendingAssistant()
+    goal_update_turns: dict[tuple[str, str, str], Turn] = {}
 
     for row in rows[1:]:
         outer_type = row.get("type", "unknown")
@@ -292,6 +415,22 @@ def normalize_codex(path: pathlib.Path, rows: list[dict[str, Any]]) -> SessionEx
             elif inner_type == "image_generation_call":
                 block = tool_block("Image Generation", _image_payload_summary(payload))
                 _append_assistant_detail(current_assistant, pending, block, timestamp)
+            elif inner_type == "tool_search_call":
+                arguments = payload.get("arguments")
+                if isinstance(arguments, str):
+                    arguments = parse_json_maybe(arguments)
+                query = ""
+                if isinstance(arguments, dict):
+                    query = str(arguments.get("query") or "").strip()
+                title = f"Tool Search: {short_text(query, 48)}" if query else "Tool Search"
+                block = tool_block(f"{title}{_call_suffix(payload)}", _tool_search_payload_summary(payload))
+                _append_assistant_detail(current_assistant, pending, block, timestamp)
+            elif inner_type == "tool_search_output":
+                block = tool_block(
+                    f"Tool Search Result{_call_suffix(payload)}",
+                    _tool_search_payload_summary(payload),
+                )
+                _append_assistant_detail(current_assistant, pending, block, timestamp)
             else:
                 _flush_pending(turns, pending)
                 turns.append(
@@ -372,6 +511,17 @@ def normalize_codex(path: pathlib.Path, rows: list[dict[str, Any]]) -> SessionEx
                         blocks=[text_block("Message", str(payload.get("message", "")).strip() or "(empty)")],
                     )
                 )
+                current_assistant = None
+            elif inner_type == "thread_goal_updated":
+                _flush_pending(turns, pending)
+                goal_turn = _goal_update_turn(payload, timestamp)
+                goal_key = _goal_update_key(payload)
+                existing_goal_turn = goal_update_turns.get(goal_key)
+                if existing_goal_turn is None:
+                    turns.append(goal_turn)
+                    goal_update_turns[goal_key] = goal_turn
+                else:
+                    _replace_turn_content(existing_goal_turn, goal_turn)
                 current_assistant = None
             else:
                 _flush_pending(turns, pending)

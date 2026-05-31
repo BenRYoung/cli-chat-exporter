@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- Added parser and diagnostic support for Codex goal metadata updates.
+- Added parser and diagnostic support for Codex tool search metadata.
+- Coalesced repeated Codex goal update heartbeats in detail exports to keep long-running session output manageable.
+- Added regression coverage for Codex goal and tool search metadata drift.
+
 ## 0.3.0
 
 - Added native Windows current-user discovery for Cursor session transcripts.

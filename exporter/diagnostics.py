@@ -18,6 +18,8 @@ KNOWN_CODEX_RESPONSE_TYPES = {
     "custom_tool_call",
     "custom_tool_call_output",
     "image_generation_call",
+    "tool_search_call",
+    "tool_search_output",
 }
 KNOWN_CODEX_EVENT_TYPES = {
     "agent_message",
@@ -35,6 +37,7 @@ KNOWN_CODEX_EVENT_TYPES = {
     "patch_apply_end",
     "task_complete",
     "task_started",
+    "thread_goal_updated",
     "thread_name_updated",
     "thread_rolled_back",
     "token_count",
